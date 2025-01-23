@@ -7,3 +7,6 @@
 [submodule "key_frame_extraction"]
 	path = key_frame_extraction
 	url = https://github.com/securade/key_frame_extraction_public.git
+[submodule "data_augmentation"]
+	path = data_augmentation
+	url = https://github.com/securade/data_augmentation_yolov7.git
