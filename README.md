@@ -87,7 +87,11 @@ Press Enter to exit ...
 
 The default password is `pass`, you can change it in the `secrets.toml` file that you have in the `.streamlit` folder.
 
-You can watch the detailed demo and turorial on how to use the HUB [here](https://www.youtube.com/playlist?list=PLphF_n2JfD10TEjFfKwQPBCdA47lyv7ae).
+To use Telegram for notifications, you will need to get an `api_id` and the `chat_id` for the channel or group you want to send the notifications.
+You can get the `api_id` by creating a new application [here](https://core.telegram.org/api/obtaining_api_id). The `chat_id` can be obtained
+by following the instructions [here](https://stackoverflow.com/q/32423837). Make sure you add your bot to the channel or group and set group admin rights for it.
+
+You can watch a detailed demo and turorial on how to use the HUB [here](https://www.youtube.com/playlist?list=PLphF_n2JfD10TEjFfKwQPBCdA47lyv7ae).
 
 The HUB can connect with any CCTV camera with RTSP streams. It has been tested to work with cameras from various vendors like D-link, Tapo, TP-Link, Axis Communications
 and HikVision.
