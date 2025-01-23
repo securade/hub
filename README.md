@@ -3,6 +3,10 @@
 Securade.ai HUB  is a generative AI based edge platform for computer vision that connects to existing CCTV cameras and makes them smart.
 It uses natural language text and generative AI to automatically train and fine-tune state-of-the-art computer vision models on the edge. This eliminates costly data labelling and annotations work typically required in training new models. Thus, enabling us to deploy a custom accurate model per camera feed.
 
+<div align="center">
+  <img src="https://securade.ai/assets/images/blog/securade.ai-edge-app-screenshot.jpeg" alt="Securade.ai HUB" width="600"/>
+</div>
+
 ## Installation
 
 ```bash
@@ -29,7 +33,7 @@ options:
   --version             show program's version number and exit
 ```
 
-Once the hub is installed you will need to configure the streamlit web server.
+Once the HUB is installed you will need to configure the streamlit web server.
 
 ```bash
 mkdir .streamlit
@@ -68,7 +72,7 @@ and HikVision.
 
 ### On a Jetson device
 Installing the HUB on an edge device with GPU is significantly more involved as we need to ensure that correct versions of Jetpack, CUDA, cuDNN, Torch and Torchvision
-are installed. You can read the detailed instructions on the wiki. 
+are installed. You can read the detailed instructions on the [wiki](https://github.com/securade/hub/wiki/How-to-install-on-Jetson). 
 
 The HUB should work with any Jetson device with atleast 8 GB of memory. It has been tested to work on Lenovo ThinkEdge SE70 Edge Client and the Nvidia Jetson AGX Orin Developer Kit.
 
@@ -82,7 +86,34 @@ Securade.ai is a tech4good venture and the commercial license allows you to depl
 
 ## Partners and Customers
 
+# Our Partners & Customers
 
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="200">
+        <img src="https://imgur.com/SJIyr7P.png" width="150" alt="Panasonic"/>
+      </td>
+      <td align="center" width="200">
+        <img src="https://imgur.com/a/4CoDeqO.png" width="150" alt="Omron"/>
+      </td>
+      <td align="center" width="200">
+        <img src="https://imgur.com/a/o5WSZCp.png" width="150" alt="Lenovo"/>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" width="200">
+        <img src="https://imgur.com/a/mn8zTo6.png" width="150" alt="Axis Communications"/>
+      </td>
+      <td align="center" width="200">
+        <img src="path/to/logo5.png" width="150" alt="Partner 5"/>
+      </td>
+      <td align="center" width="200">
+        <img src="path/to/logo6.png" width="150" alt="Partner 6"/>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ## References
 
