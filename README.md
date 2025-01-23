@@ -7,6 +7,28 @@ It uses natural language text and generative AI to automatically train and fine-
   <img src="https://securade.ai/assets/images/blog/securade.ai-edge-app-screenshot.jpeg" alt="Securade.ai HUB" width="600"/>
 </div>
 
+## Features
+
+🤖 **Zero-Shot Learning** - Train computer vision models using natural language descriptions without manual data labeling
+
+🎯 **Real-Time Detection** - Process live CCTV feeds to detect safety violations and security incidents in real-time
+
+👷 **PPE Detection** - Automatically identify workers not wearing required safety equipment like hardhats, vests, and masks
+
+⚡ **Proximity Alerts** - Detect unsafe proximity between workers and heavy machinery or vehicles
+
+🚫 **Exclusion Zones** - Monitor restricted areas and detect unauthorized access with configurable zone policies
+
+📊 **Analytics Dashboard** - Track safety metrics, violation trends, and generate reports through an intuitive web interface
+
+🎥 **Multi-Camera Support** - Connect to multiple CCTV cameras simultaneously with support for major brands like D-link, Tapo, TP-Link, Axis and HikVision
+
+🔔 **Instant Notifications** - Receive real-time alerts via Telegram when safety violations are detected
+
+🎭 **Privacy Protection** - Optional face masking feature to protect worker privacy in captured images
+
+💻 **Edge Processing** - Run entirely on local hardware with no cloud dependency, ideal for sites with limited connectivity
+
 ## Installation
 
 ```bash
