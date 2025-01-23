@@ -93,10 +93,8 @@ by following the instructions [here](https://stackoverflow.com/q/32423837). Make
 
 You can watch a detailed demo and turorial on how to use the HUB [here](https://www.youtube.com/playlist?list=PLphF_n2JfD10TEjFfKwQPBCdA47lyv7ae).
 
-The HUB can connect with any CCTV camera with RTSP streams. It has been tested to work with cameras from various vendors like D-link, Tapo, TP-Link, Axis Communications
-and HikVision.
-
 ### On a Jetson device
+
 Installing the HUB on an edge device with GPU is significantly more involved as we need to ensure that correct versions of Jetpack, CUDA, cuDNN, Torch and Torchvision
 are installed. You can read the detailed instructions on the [wiki](https://github.com/securade/hub/wiki/How-to-install-on-Jetson). 
 
