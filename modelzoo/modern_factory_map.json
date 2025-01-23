@@ -1,0 +1,10 @@
+{
+    "truck" : "vehicle", 
+    "robot" : "vehicle",
+    "machine" : "machinery", 
+    "parcel box" : "machinery", 
+    "robotic arm" : "machinery",
+    "woman" : "Person",
+    "hard hat" : "Hardhat",
+    "laptop" : "machinery"
+}

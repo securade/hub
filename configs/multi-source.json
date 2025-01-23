@@ -1,0 +1,18 @@
+{   
+    "api_key": "your_telegram_api_key",
+    "chat_id": "your_telegram_chat_id",
+    "model" : "modelzoo/safety.pt",
+    "img_size" : 640,
+    "img_aug" : false,
+    "conf_thres" : 0.25,
+    "iou_thres" : 0.45,
+    "mask_faces" : false,
+    "show_cameras" : true,
+    "sources" : [{ "url" : "0", "policy_file" : "ppe_policy.json", "duration" : 10},
+                 { "url" : "1", "policy_file" : "exclusion_policy.json", "duration" : 10},
+                 { "url" : "2", "policy_file" : "proximity_policy.json", "duration" : 10},
+                 { "url" : "rtsp://username:password@192.168.10.212/stream1", 
+                 "policy_file" : "custom_policy.json", "duration" : 10,
+                 "alert_url" : "192.168.10.212"}
+                ]
+}

@@ -1,0 +1,11 @@
+{
+    "worker" : "Person",
+    "construction worker" : "Person",
+    "person" : "Person",
+    "no barrier" : "machinery",
+    "open edge" : "machinery",
+    "no barricade" : "machinery",
+    "scaffolding" : "machinery",
+    "open barrier" : "machinery",
+    "open barricade" : "machinery"
+}

@@ -1,0 +1,14 @@
+{
+    "big bus" : "vehicle", 
+    "big truck" : "vehicle",
+    "bus-l-" : "vehicle", 
+    "bus-s-" : "vehicle", 
+    "car" : "vehicle",
+    "mid truck" : "vehicle",
+    "small bus" : "vehicle",
+    "small truck" : "vehicle",
+    "truck-l-" : "vehicle",
+    "truck-m-" : "vehicle",
+    "truck-s-" : "vehicle",
+    "truck-xl-" : "vehicle"
+}

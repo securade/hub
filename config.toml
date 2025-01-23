@@ -1,0 +1,13 @@
+[global]
+disableWatchdogWarning = true
+
+[server]
+port = 8080
+fileWatcherType = "none"
+headless = true
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
