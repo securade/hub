@@ -150,9 +150,11 @@ Securade.ai is a tech4good venture and the commercial license allows you to depl
 
 ## References
 
+- [HUB Wiki](https://github.com/securade/hub/wiki)
 - [Deep Dive Demos](https://www.youtube.com/playlist?list=PLphF_n2JfD10TEjFfKwQPBCdA47lyv7ae)
 - [White Paper on Generative AI-Based Video Analytics](https://securade.ai/assets/pdfs/Securade.ai-Generative-AI-Video-Analytics-Whitepaper.pdf)
 - [Solution Deck](https://securade.ai/assets/pdfs/Securade.ai-Solution-Overview.pdf)
 - [Customer Case Study](https://securade.ai/assets/pdfs/Vestar-Iron-Works-Pte-Ltd-Case-Study.pdf)
 - [Safety Copilot for Worker Safety](https://securade.ai/safety-copilot.html)
+- [White Paper on Safey Copilot](https://securade.ai/assets/pdfs/Securade.ai-Safety-Copilot-Whitepaper.pdf)
 - [More Resources](https://securade.ai/resources.html)
