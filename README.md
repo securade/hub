@@ -74,7 +74,7 @@ and HikVision.
 Installing the HUB on an edge device with GPU is significantly more involved as we need to ensure that correct versions of Jetpack, CUDA, cuDNN, Torch and Torchvision
 are installed. You can read the detailed instructions on the [wiki](https://github.com/securade/hub/wiki/How-to-install-on-Jetson). 
 
-The HUB should work with any Jetson device with atleast 8 GB of memory. It has been tested to work on Lenovo ThinkEdge SE70 Edge Client and the Nvidia Jetson AGX Orin Developer Kit.
+The HUB should work with any Jetson device with atleast 8 GB of memory. It has been tested to work on Lenovo ThinkEdge SE70 Edge Client and the NVIDIA Jetson AGX Orin Developer Kit.
 
 ## License
 
@@ -86,30 +86,39 @@ Securade.ai is a tech4good venture and the commercial license allows you to depl
 
 ## Partners and Customers
 
-# Our Partners & Customers
-
 <div align="center">
-  <table>
+  <table border="0" cellspacing="10" cellpadding="20">
     <tr>
       <td align="center" width="200">
         <img src="https://imgur.com/SJIyr7P.png" width="150" alt="Panasonic"/>
       </td>
       <td align="center" width="200">
-        <img src="https://imgur.com/a/4CoDeqO.png" width="150" alt="Omron"/>
+        <img src="https://imgur.com/RpNEomG.png" width="150" alt="Omron"/>
       </td>
       <td align="center" width="200">
-        <img src="https://imgur.com/a/o5WSZCp.png" width="150" alt="Lenovo"/>
+        <img src="https://imgur.com/Bd3VnU4.png" width="150" alt="Lenovo"/>
       </td>
     </tr>
     <tr>
       <td align="center" width="200">
-        <img src="https://imgur.com/a/mn8zTo6.png" width="150" alt="Axis Communications"/>
+        <img src="https://imgur.com/AnHTgT0.png" width="150" alt="Axis Communications"/>
       </td>
       <td align="center" width="200">
-        <img src="path/to/logo5.png" width="150" alt="Partner 5"/>
+        <img src="https://imgur.com/OruGLi2.png" width="150" alt="NVIDIA"/>
       </td>
       <td align="center" width="200">
-        <img src="path/to/logo6.png" width="150" alt="Partner 6"/>
+        <img src="https://imgur.com/qTI4QWi.png" width="150" alt="King Island"/>
+      </td>
+    </tr>
+        <tr>
+      <td align="center" width="200">
+        <img src="https://imgur.com/kDcJjnd.png" width="150" alt="Woh Hup"/>
+      </td>
+      <td align="center" width="200">
+        <img src="https://imgur.com/WkboPy9.png" width="150" alt="Vestar Iron Works"/>
+      </td>
+      <td align="center" width="200">
+        <img src="https://imgur.com/IDeo2xX.png" width="150" alt="SRPOST"/>
       </td>
     </tr>
   </table>
