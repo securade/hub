@@ -63,6 +63,9 @@ The default password is `pass`, you can change it in the `secrets.toml` file tha
 
 You can watch the detailed demo and turorial on how to use the HUB [here](https://www.youtube.com/playlist?list=PLphF_n2JfD10TEjFfKwQPBCdA47lyv7ae).
 
+The HUB can connect with any CCTV camera with RTSP streams. It has been tested to work with cameras from various vendors like D-link, Tapo, TP-Link, Axis Communications
+and HikVision.
+
 ### On a Jetson device
 Installing the HUB on an edge device with GPU is significantly more involved as we need to ensure that correct versions of Jetpack, CUDA, cuDNN, Torch and Torchvision
 are installed. You can read the detailed instructions on the wiki. 
@@ -75,6 +78,17 @@ Securade.ai HUB is open-source and available under the GNU AGPL license. You can
 If you are looking to bundle it and distribute to others, you will need a commercial license. 
 
 You can get the [Securade.ai Commercial License](https://securade.ai/subscribe) for a nominal fees of 99 SGD per month. 
-Securade.is is a tech4good venture and the commercial license allows you to deploy the HUB on an unlimited number of devices and servers.
+Securade.ai is a tech4good venture and the commercial license allows you to deploy the HUB on an unlimited number of devices and servers.
 
-## Customers & Partners
+## Partners and Customers
+
+
+
+## References
+
+- [Deep Dive Demos](https://www.youtube.com/playlist?list=PLphF_n2JfD10TEjFfKwQPBCdA47lyv7ae)
+- [White Paper on Generative AI-Based Video Analytics](https://securade.ai/assets/pdfs/Securade.ai-Generative-AI-Video-Analytics-Whitepaper.pdf)
+- [Solution Deck](https://securade.ai/assets/pdfs/Securade.ai-Solution-Overview.pdf)
+- [Customer Case Study](https://securade.ai/assets/pdfs/Vestar-Iron-Works-Pte-Ltd-Case-Study.pdf)
+- [Safety Copilot for Worker Safety](https://securade.ai/safety-copilot.html)
+- [More Resources](https://securade.ai/resources.html)
