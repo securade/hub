@@ -9,25 +9,25 @@ It uses natural language text and generative AI to automatically train and fine-
 
 ## Features
 
-🤖 **Zero-Shot Learning** - Train computer vision models using natural language descriptions without manual data labeling
+🤖 **Zero-Shot Learning** - No manual data labeling needed - train models using natural language descriptions
 
-🎯 **Real-Time Detection** - Process live CCTV feeds to detect safety violations and security incidents in real-time
+🎯 **Real-Time Detection** - Live monitoring of CCTV feeds for safety and security incidents
 
-👷 **PPE Detection** - Automatically identify workers not wearing required safety equipment like hardhats, vests, and masks
+👷 **PPE Detection** - Automated detection of hardhat, vest, and mask compliance
 
-⚡ **Proximity Alerts** - Detect unsafe proximity between workers and heavy machinery or vehicles
+⚡ **Proximity Alerts** - Monitor safe distances between workers and machinery/vehicles
 
-🚫 **Exclusion Zones** - Monitor restricted areas and detect unauthorized access with configurable zone policies
+🚫 **Exclusion Zones** - Configurable restricted area monitoring and access control
 
-📊 **Analytics Dashboard** - Track safety metrics, violation trends, and generate reports through an intuitive web interface
+📊 **Analytics Dashboard** - Real-time safety metrics and violation tracking interface
 
-🎥 **Multi-Camera Support** - Connect to multiple CCTV cameras simultaneously with support for major brands like D-link, Tapo, TP-Link, Axis and HikVision
+🎥 **Multi-Camera Support** - Compatible with D-link, Tapo, TP-Link, Axis and HikVision cameras
 
-🔔 **Instant Notifications** - Receive real-time alerts via Telegram when safety violations are detected
+🔔 **Instant Notifications** - Real-time Telegram alerts for detected violations
 
-🎭 **Privacy Protection** - Optional face masking feature to protect worker privacy in captured images
+🎭 **Privacy Protection** - Automatic face masking to maintain worker privacy
 
-💻 **Edge Processing** - Run entirely on local hardware with no cloud dependency, ideal for sites with limited connectivity
+💻 **Edge Processing** - Local processing without cloud dependency
 
 ## Installation
 
