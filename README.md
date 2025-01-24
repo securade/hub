@@ -5,6 +5,9 @@ It uses natural language text and generative AI to automatically train and fine-
 
 <div align="center">
   <img src="https://securade.ai/assets/images/blog/securade.ai-edge-app-screenshot.jpeg" alt="Securade.ai HUB" width="600"/>
+  <br />
+  <br />
+  <a href="https://securade.streamlit.app/"><img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Streamlit App"/></a>
 </div>
 
 ## Features
