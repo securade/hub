@@ -103,6 +103,36 @@ are installed. You can read the detailed instructions on the [wiki](https://gith
 
 The HUB should work with any Jetson device with atleast 8 GB of memory. It has been tested to work on Lenovo ThinkEdge SE70 Edge Client and the NVIDIA Jetson AGX Orin Developer Kit.
 
+## Plugin System
+
+The HUB includes a flexible plugin system that allows you to extend its image processing capabilities. You can create custom plugins to add new computer vision features, image processing algorithms, or integrate with other AI models.
+
+### Available Plugins
+
+The HUB comes with several built-in plugins:
+- **YOLO Object Detector**: Default object detection using YOLOv7
+- **Edge Detector**: Basic edge detection using OpenCV
+
+### Creating Custom Plugins
+
+To create a new plugin, add a Python file to the `plugins` directory that implements the BasePlugin interface:
+
+```python
+from plugins.base_plugin import BasePlugin
+
+class MyPlugin(BasePlugin):
+    SLUG = "my_plugin"
+    NAME = "My Custom Plugin"
+    
+    def run(self, image, **kwargs):
+        # Your image processing code here
+        return processed_image
+```
+
+The plugin will automatically be discovered and appear in the HUB interface's plugin selection dropdown.
+
+For detailed documentation on creating plugins, including examples and best practices, see the [plugins/README.md](plugins/README.md).
+
 ## License
 
 Securade.ai HUB is open-source and available under the GNU AGPL license. You can freely use it on your own edge devices or servers.
