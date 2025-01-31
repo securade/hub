@@ -140,6 +140,7 @@ if check_password():
                     "Guidance Scale:", 
                     min_value=2.0, 
                     max_value=10.0, 
+                    step = 0.1,
                     value=8.0, 
                     help="Higher values give better adherence to prompt"
                 )
