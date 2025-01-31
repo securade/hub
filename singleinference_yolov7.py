@@ -167,7 +167,7 @@ class SingleInference_YOLOV7:
                 self.outputs = torch.from_numpy(self.open_vino_model(self.im)[self.outputs])
                 
             else :
-                if not self.path_yolov7_weights.endswith('safety.pt'):
+                if not self.path_yolov7_weights.endswith('safety.pt') and not self.path_yolov7_weights.endswith('yolov7-tiny.pt'):
                     map_file = self.path_yolov7_weights.replace(".pt", "_map.json")
                     model_object_map = json.load(open(map_file))
                 else:
