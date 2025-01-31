@@ -126,13 +126,23 @@ if check_password():
 
         elif selected_plugin == "safety_transform":
             st.subheader("Safety Gear Transform Parameters")
-            plugin_kwargs['num_inference_steps'] = st.slider(
-                "Number of Inference Steps:", 
-                min_value=10, 
-                max_value=50, 
-                value=20, 
-                help="Higher values give better quality but take longer"
-            )
+            col1, col2 = st.columns(2)
+            with col1:
+                plugin_kwargs['num_inference_steps'] = st.slider(
+                    "Number of Inference Steps:", 
+                    min_value=10, 
+                    max_value=50, 
+                    value=20, 
+                    help="Higher values give better quality but take longer"
+                )
+            with col2:
+                plugin_kwargs['guidance_scale'] = st.slider(
+                    "Guidance Scale:", 
+                    min_value=2.0, 
+                    max_value=10.0, 
+                    value=8.0, 
+                    help="Higher values give better adherence to prompt"
+                )
 
         return plugin_kwargs
 

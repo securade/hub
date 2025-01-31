@@ -27,7 +27,7 @@ class SafetyTransformPlugin(BasePlugin):
         
         # Inpainting prompt
         self.prompt = (
-            "A person wearing a high-visibility orange safety vest."
+            "A person wearing a bright colored safety harness and vest."
             "Only the clothing is changed; the person's face and pose remain the same."
         )     
         
@@ -193,7 +193,7 @@ class SafetyTransformPlugin(BasePlugin):
             traceback.print_exc()
             return None
 
-    def inpaint_safety_gear(self, image, mask, num_inference_steps):
+    def inpaint_safety_gear(self, image, mask, num_inference_steps, guidance_scale):
         """Inpaint safety gear using Stable Diffusion"""
         try:
             # Ensure image is in RGB format
@@ -219,7 +219,7 @@ class SafetyTransformPlugin(BasePlugin):
                     image=image_pil_resized,
                     mask_image=mask_pil_resized,
                     num_inference_steps=num_inference_steps,
-                    guidance_scale=7.5,
+                    guidance_scale=guidance_scale,
                 ).images[0]
 
             # Save inpainting output
@@ -256,6 +256,7 @@ class SafetyTransformPlugin(BasePlugin):
             # Get YOLO detector
             detector = kwargs.get('yolo_detector')
             num_inference_steps = kwargs.get('num_inference_steps', 20)
+            guidance_scale = kwargs.get("guidance_scale", 8.0)
             if detector is None:
                 raise ValueError("Missing YOLO detector")
             
@@ -279,7 +280,7 @@ class SafetyTransformPlugin(BasePlugin):
                 return image
                 
             # Step 3: Inpaint safety gear
-            result = self.inpaint_safety_gear(image, mask, num_inference_steps)
+            result = self.inpaint_safety_gear(image, mask, num_inference_steps, guidance_scale)
             
             print("Pipeline completed")
             return result
