@@ -6,8 +6,6 @@ import cv2
 from typing import List, NamedTuple
 from singleinference_yolov7 import SingleInference_YOLOV7
 
-from plugins.plugin_manager import PluginManager
-
 import platform
 if platform.machine() == 'x86_64':
     from openvino.runtime import Core
@@ -148,14 +146,6 @@ if check_password():
         yolov7_detector = get_detector_model()
         st.session_state[cache_key] = yolov7_detector
 
-    # Initialize plugin manager
-    plugin_manager = PluginManager()
-    plugin_manager.load_plugins()
-    # Get list of plugin options
-    plugin_options = list(plugin_manager.get_plugin_choices().keys())
-    # Find the index of yolo_detector
-    default_index = plugin_options.index("yolo_detector") if "yolo_detector" in plugin_options else 0
-
     data = None
     policy_json = st.file_uploader("Upload the safety policy file (e.g. ppe_policy.json)", type=["json"], key="policy")
     save_frame = st.button("Save Frame")
@@ -167,17 +157,8 @@ if check_password():
     else:
         input = camera_id
     run = st.checkbox('Run', key="run_box")
-    labels = st.checkbox("Show the detected labels ()", value=False, key="show_labels")
+    labels = st.checkbox("Show the detected labels", value=False, key="show_labels")
 
-    # Add plugin selector dropdown before the camera feed
-    selected_plugin = st.selectbox(
-        "Select Processing Plugin:",
-        options=plugin_options,
-        format_func=lambda x: plugin_manager.get_plugin_choices()[x],
-        index=default_index,
-        key="plugin_selector"
-    )
-    
     FRAME_WINDOW = st.image([])
     camera = cv2.VideoCapture(input)
     labels_placeholder = st.empty()
@@ -247,13 +228,9 @@ if check_password():
                         zone_image = yolov7_detector.detect_zone(image, poly, persons, machinery, vehicles, inclusion, max_number_allowed)
                         annotated_image = yolov7_detector.detect_ppe(zone_image, hardhats, vests, masks, no_hardhats, no_vests, no_masks) 
                 else:
-                    # Run the selected plugin with necessary arguments
-                    plugin_kwargs = {
-                        'yolo_detector': yolov7_detector,  # Pass the detector for plugins that need it
-                        'threshold1': 100,  # Example parameter for edge detector
-                        'threshold2': 200,  # Example parameter for edge detector
-                    }
-                    annotated_image = plugin_manager.run_plugin(selected_plugin, image, **plugin_kwargs)
+                    yolov7_detector.load_cv2mat(image)
+                    yolov7_detector.inference()
+                    annotated_image = yolov7_detector.image.copy()
                 
                 FRAME_WINDOW.image(annotated_image)
                 

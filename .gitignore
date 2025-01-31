@@ -172,3 +172,4 @@ cython_debug/
 **/.DS_Store
 .streamlit
 process.pid
+debug_output/
