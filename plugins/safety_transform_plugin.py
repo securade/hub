@@ -40,9 +40,8 @@ class SafetyTransformPlugin(BasePlugin):
 
     def generate_mask(self, image: np.ndarray, bbox: list) -> np.ndarray:
         """Generate person head mask for hard hat"""
+        h, w = image.shape[:2]
         try:
-            h, w = image.shape[:2]
-            
             # Convert bbox to head region (upper 1/3 of person bbox)
             x1, y1, x2, y2 = map(float, bbox)
             head_height = (y2 - y1) / 3  # Take top third for head
@@ -135,45 +134,53 @@ class SafetyTransformPlugin(BasePlugin):
     def run(self, image: np.ndarray, **kwargs) -> np.ndarray:
         """Process image adding hard hats to detected persons"""
         try:
+            # Get YOLO detector from kwargs
             detector = kwargs.get('yolo_detector')
             if detector is None:
                 raise ValueError("SafetyTransform plugin requires 'yolo_detector'")
                 
+            # Run detection
             detector.load_cv2mat(image)
             detector.inference()
             
             output_image = image.copy()
+            person_found = False
             
             # Process only person detections
             for detection in detector.predicted_bboxes_PascalVOC:
-                try:
-                    label = detection[0]
-                    if label != 'Person':
-                        continue
-                        
-                    bbox = detection[1:5]
-                    confidence = float(detection[-1])
-                    
-                    # Only process high confidence detections
-                    if confidence < 0.5:
-                        continue
-                        
-                    # Generate mask for person's head
-                    mask = self.generate_mask(image, bbox)
-                    
-                    if mask is None or not mask.any():
-                        continue
-                        
-                    # Inpaint hard hat
-                    output_image = self.inpaint_hardhat(output_image, mask)
-                    
-                except Exception as e:
-                    print(f"Error processing detection: {str(e)}")
+                label = detection[0]
+                
+                # Skip if not a person detection
+                if label.lower() != 'person':
                     continue
                     
+                person_found = True
+                confidence = float(detection[-1])
+                
+                # Skip low confidence detections
+                if confidence < 0.5:
+                    continue
+                    
+                # Get bounding box coordinates
+                bbox = detection[1:5]
+                
+                # Generate mask for person's head
+                mask = self.generate_mask(image, bbox)
+                
+                if mask is None or not mask.any():
+                    continue
+                    
+                # Inpaint hard hat
+                output_image = self.inpaint_hardhat(output_image, mask)
+                
             # Clear GPU memory if using CUDA
             if self.device == "cuda":
                 torch.cuda.empty_cache()
+            
+            # If no persons were detected, return original image
+            if not person_found:
+                print("No persons detected in image")
+                return image
                 
             return output_image
             
