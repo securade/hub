@@ -45,7 +45,7 @@ if check_password():
     IMG_SIZE = 640
     DEFAULT_CONFIDENCE_THRESHOLD = 0.25
     DEFAULT_OVERLAP_THRESHOLD = 0.45
-    MODEL_WEIGHTS = "./modelzoo/yolov7-tiny.pt"  # Using tiny model for faster processing
+    MODEL_WEIGHTS = "./modelzoo/safety.pt"  # Using tiny model for faster processing
 
     # Initialize YOLO detector
     def get_detector_model(conf_thres, iou_thres):
@@ -123,7 +123,17 @@ if check_password():
                 plugin_kwargs['threshold1'] = st.slider("Threshold 1:", 0, 255, 100)
             with col2:
                 plugin_kwargs['threshold2'] = st.slider("Threshold 2:", 0, 255, 200)
-        
+
+        elif selected_plugin == "safety_transform":
+            st.subheader("Safety Gear Transform Parameters")
+            plugin_kwargs['num_inference_steps'] = st.slider(
+                "Number of Inference Steps:", 
+                min_value=10, 
+                max_value=50, 
+                value=20, 
+                help="Higher values give better quality but take longer"
+            )
+
         return plugin_kwargs
 
     # Get plugin-specific parameters
