@@ -167,7 +167,7 @@ if check_password():
     else:
         input = camera_id
     run = st.checkbox('Run', key="run_box")
-    labels = st.checkbox("Show the detected labels ()", value=False, key="show_labels")
+    labels = st.checkbox("Show the detected labels", value=False, key="show_labels")
 
     # Add plugin selector dropdown before the camera feed
     selected_plugin = st.selectbox(
@@ -177,7 +177,7 @@ if check_password():
         index=default_index,
         key="plugin_selector"
     )
-    
+
     FRAME_WINDOW = st.image([])
     camera = cv2.VideoCapture(input)
     labels_placeholder = st.empty()

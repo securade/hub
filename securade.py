@@ -6,6 +6,11 @@ import os
 import json
 import safety_app
 import requests
+import os
+import signal
+import psutil
+import subprocess
+import time
 
 from threading import Thread
 from queue import Queue
@@ -152,8 +157,9 @@ def process():
             if 'alert_url' in camera:
                 alert_url = camera['alert_url']
                 if alert_url !=  "" and "axis-cgi" not in alert_url: 
+                    # These settings are for using the Tapo camera itself as an alert strobe 
                     user = 'admin' # user you set in Advanced Settings -> Camera Account
-                    password = 'master123' # This seems to be using the Tapo account email address/password instead of RTSP.
+                    password = 'pass' # This seems to be using the Tapo account email address/password instead of RTSP.
                     host = alert_url # ip of the camera, example: 192.168.1.52
                     tapo = Tapo(host, user, password)  
                     alerts.append(tapo)
@@ -430,6 +436,97 @@ def process():
     print(f'Done. ({time.time() - t0:.3f}s)')
 
 
+def kill_process_tree(pid):
+    """Kill a process and all its children."""
+    try:
+        parent = psutil.Process(pid)
+        children = parent.children(recursive=True)
+        
+        # First send SIGTERM to all children
+        for child in children:
+            try:
+                child.terminate()
+            except psutil.NoSuchProcess:
+                pass
+        
+        # Then terminate the parent
+        parent.terminate()
+        
+        # Wait for processes to terminate gracefully
+        gone, alive = psutil.wait_procs(children + [parent], timeout=3)
+        
+        # If any processes are still alive, force kill them
+        for process in alive:
+            try:
+                process.kill()
+            except psutil.NoSuchProcess:
+                pass
+                
+    except psutil.NoSuchProcess:
+        pass
+
+def find_streamlit_processes(target_script_path):
+    """
+    Find Streamlit processes specifically running our target script.
+    
+    Args:
+        target_script_path (str): The full path to our Configure_Camera.py script
+    """
+    streamlit_processes = []
+    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        try:
+            cmdline = proc.info['cmdline'] or []
+            # Check if this is a streamlit process running our specific script
+            if (len(cmdline) >= 3 and 
+                'streamlit' in str(cmdline[0]).lower() and 
+                'run' in str(cmdline[1]).lower() and 
+                target_script_path in str(cmdline[2])):
+                streamlit_processes.append(proc)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+    return streamlit_processes
+
+def run_streamlit_server():
+    """Run the Streamlit server with proper cleanup on shutdown."""
+    # Get the full path to our script
+    script_path = os.path.join(os.getcwd(), os.path.dirname(__file__), 'Configure_Camera.py')
+    try:
+        # Start the Streamlit process
+        process = subprocess.Popen(
+            ['streamlit', 'run', script_path],
+            start_new_session=True  # This creates a new process group
+        )
+        
+        print("Server started. Press Enter to shutdown...")
+        input()
+        
+    except KeyboardInterrupt:
+        print("\nReceived shutdown signal...")
+    finally:
+        print("Shutting down server...")
+        
+        # Kill the main process tree
+        kill_process_tree(process.pid)
+        
+        # Find and kill any remaining Streamlit processes
+        for proc in find_streamlit_processes(script_path):
+            kill_process_tree(proc.pid)
+        
+        # Wait a moment to ensure all processes are cleaned up
+        time.sleep(1)
+        
+        # Verify no Streamlit processes are left
+        remaining = find_streamlit_processes(script_path)
+        if remaining:
+            print(f"Warning: {len(remaining)} Streamlit processes still running")
+            for proc in remaining:
+                try:
+                    proc.kill()
+                except psutil.NoSuchProcess:
+                    pass
+        
+        print("Server shutdown complete")
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, help='Load config from file')
@@ -445,8 +542,6 @@ if __name__ == '__main__':
     if opt.config is None and opt.server is False:
         print('No config file specified, please supply a [config.json] file via --config flag.')
     elif opt.server:
-        process = subprocess.Popen(['streamlit', 'run', os.path.join(os.getcwd(), os.path.dirname(__file__), 'Configure_Camera.py')])
-        input('Press Enter to exit ...\n')
-        process.terminate()
+        run_streamlit_server()
     elif opt.config is not None:
         process()
