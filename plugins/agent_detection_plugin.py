@@ -12,88 +12,69 @@ from PIL import Image
 import logging
 from typing import List, Dict, Any, Tuple
 import os
+import json
+import re
 
-class AgentDetectionPlugin(BasePlugin):
-    """Plugin that performs agentic object detection using VLM and reasoning"""
+class AgentLoopPlugin(BasePlugin):
+    """Plugin that implements an agent loop between reasoning and vision models"""
     
     SLUG = "agent_detector"
-    NAME = "Agentic Object Detector"
+    NAME = "Agent Loop Detector"
     
     def __init__(self):
-        # Initialize logging
         self.logger = logging.getLogger(__name__)
-        
-        # Set device
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.logger.info(f"Using device: {self.device}")
         
-        # Initialize models as None - will load on first use
         self.vlm_model = None
         self.vlm_processor = None
         self.reasoning_model = None
         self.reasoning_tokenizer = None
         
-        # Create debug directory
         self.debug_dir = "debug_output/agent_detection"
         os.makedirs(self.debug_dir, exist_ok=True)
 
     def load_models(self):
-        """Load VLM and reasoning models if not already loaded"""
+        """Load required models"""
         try:
             if self.vlm_model is None:
                 self.logger.info("Loading VLM model...")
                 model_path = "HuggingFaceTB/SmolVLM2-256M-Video-Instruct"
-                
                 self.vlm_processor = AutoProcessor.from_pretrained(model_path)
                 self.vlm_model = AutoModelForImageTextToText.from_pretrained(
                     model_path,
-                    torch_dtype=torch.float32,  # Use float32 instead of bfloat16
+                    torch_dtype=torch.float32,
                     attn_implementation="flash_attention_2" if self.device == "cuda" else "eager"
                 ).to(self.device)
-                self.logger.info("VLM model loaded")
 
             if self.reasoning_model is None:
                 self.logger.info("Loading reasoning model...")
                 reasoning_path = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
-                
                 self.reasoning_tokenizer = AutoTokenizer.from_pretrained(reasoning_path)
                 self.reasoning_model = AutoModelForCausalLM.from_pretrained(
                     reasoning_path,
-                    torch_dtype=torch.float32 if self.device == "cpu" else torch.float16
+                    torch_dtype=torch.float32
                 ).to(self.device)
-                self.logger.info("Reasoning model loaded")
 
         except Exception as e:
             self.logger.error(f"Error loading models: {e}")
             raise
 
     def save_debug_image(self, image: np.ndarray, name: str):
-        """Save debug image"""
-        path = os.path.join(self.debug_dir, f"{name}.jpg")
-        cv2.imwrite(path, image)
-        self.logger.debug(f"Saved debug image: {path}")
+        """Save debug image to disk"""
+        try:
+            path = os.path.join(self.debug_dir, f"{name}.jpg")
+            cv2.imwrite(path, image)
+            self.logger.debug(f"Saved debug image: {path}")
+        except Exception as e:
+            self.logger.error(f"Error saving debug image: {e}")
 
     def query_vlm(self, image: np.ndarray, question: str) -> str:
-        """Query the VLM model about the image"""
+        """Query VLM model with an image and question"""
         try:
-            # Validate input image
-            if not isinstance(image, np.ndarray):
-                raise ValueError("Input must be a numpy array")
-            if image.size == 0:
-                raise ValueError("Empty image")
-                
-            # Ensure image is in correct format
-            if len(image.shape) != 3:
-                raise ValueError("Image must be 3-dimensional (H,W,C)")
-                
-            # Ensure question is not empty
-            if not question or not isinstance(question, str):
-                raise ValueError("Question must be a non-empty string")
-            # Convert to PIL Image
             image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             image_pil = Image.fromarray(image_rgb)
             
-            # Prepare messages
             messages = [{
                 "role": "user",
                 "content": [
@@ -102,8 +83,6 @@ class AgentDetectionPlugin(BasePlugin):
                 ]
             }]
             
-            # Process input
-            # Process inputs with proper dtype handling
             inputs = self.vlm_processor.apply_chat_template(
                 messages,
                 add_generation_prompt=True,
@@ -112,7 +91,6 @@ class AgentDetectionPlugin(BasePlugin):
                 return_tensors="pt"
             )
             
-            # Convert inputs to appropriate dtype and device based on tensor type
             inputs = {
                 k: (v.to(device=self.device, dtype=torch.long) 
                    if k in ['input_ids', 'attention_mask'] 
@@ -121,183 +99,182 @@ class AgentDetectionPlugin(BasePlugin):
                 for k, v in inputs.items()
             }
             
-            self.logger.debug(f"Input tensor types: {[(k, v.dtype) if isinstance(v, torch.Tensor) else (k, type(v)) for k, v in inputs.items()]}")
-            
-            # Generate response
             with torch.inference_mode():
-                generated_ids = self.vlm_model.generate(
-                    **inputs, 
-                    do_sample=True,  # Enable sampling
-                    max_new_tokens=64,
-                    temperature=0.6,  # Control randomness
-                    top_p=0.95,      # Nucleus sampling
-                    num_beams=1       # Simple sampling without beam search
+                output_ids = self.vlm_model.generate(
+                    **inputs,
+                    do_sample=True,
+                    max_new_tokens=256,
+                    temperature=0.6,
+                    top_p=0.9
                 )
-                
-            # Decode response
+            
             response = self.vlm_processor.batch_decode(
-                generated_ids,
+                output_ids,
                 skip_special_tokens=True
             )[0]
             
-            return response
-
+            return response.strip()
+            
         except Exception as e:
-            self.logger.error(f"Error querying VLM: {e}")
+            self.logger.error(f"Error in VLM query: {e}")
             return ""
 
-    def reason_about_objects(self, vlm_responses: List[str], image_context: str) -> List[Dict]:
-        """Use reasoning model to analyze VLM responses and determine objects"""
+    def get_agent_reasoning(self, context: Dict) -> Dict:
+        """Get next step from reasoning model"""
         try:
-            # Construct prompt
-            prompt = f"""Given an image with the following context:
-{image_context}
+            # Format the conversation history and context
+            prompt = f"""You are a visual analysis agent trying to detect {context['target']} in an image.
+Current understanding: {context['current_understanding']}
+Previous observations: {context['observations']}
 
-And these visual language model observations:
-{' '.join(vlm_responses)}
+Think step by step about what information you need next and output a JSON response in this format:
+{{
+    "analysis": "Your step-by-step analysis of the current situation",
+    "next_action": {{
+        "type": "locate | verify | measure",
+        "question": "Specific question to ask the vision model",
+        "region": ["whole_image" or specific coordinates]
+    }},
+    "detection_status": "continuing | complete",
+    "detected_objects": [
+        {{
+            "id": "unique_id",
+            "coordinates": [x1, y1, x2, y2],
+            "confidence": 0.XX
+        }}
+    ]
+}}
 
-<think>
-1. Let me analyze the key objects mentioned
-2. Consider their relationships and attributes
-3. Determine confident object detections
-4. Filter out uncertain or inconsistent detections
-</think>
+Make your question as specific as possible to get precise location information."""
 
-Please identify the key objects with their attributes and locations.
-"""
-            # Generate reasoning
             inputs = self.reasoning_tokenizer(prompt, return_tensors="pt").to(self.device)
             
             with torch.inference_mode():
                 outputs = self.reasoning_model.generate(
                     **inputs,
-                    max_new_tokens=256,
-                    do_sample=False
+                    max_new_tokens=512,
+                    do_sample=True,
+                    temperature=0.7
                 )
             
-            reasoning = self.reasoning_tokenizer.decode(outputs[0], skip_special_tokens=True)
+            response = self.reasoning_tokenizer.decode(outputs[0], skip_special_tokens=True)
             
-            # Extract object detections from reasoning
-            # This is a simplified version - you'd want more robust parsing
-            objects = []
-            for line in reasoning.split('\n'):
-                if ':' in line:
-                    obj_type, details = line.split(':', 1)
-                    objects.append({
-                        'type': obj_type.strip(),
-                        'details': details.strip()
-                    })
-                    
-            return objects
-
+            # Extract JSON from response
+            json_match = re.search(r'\{[\s\S]*\}', response)
+            if not json_match:
+                raise ValueError("No valid JSON in response")
+            
+            return json.loads(json_match.group(0))
+            
         except Exception as e:
             self.logger.error(f"Error in reasoning: {e}")
-            return []
+            return {}
 
-    def traditional_cv_detection(self, image: np.ndarray) -> List[Dict]:
-        """Apply traditional CV techniques for additional detection"""
+    def run_agent_loop(self, image: np.ndarray, target: str, debug: bool = False) -> List[Dict]:
+        """Run the agent loop to detect objects"""
         detections = []
+        context = {
+            "target": target,
+            "current_understanding": "Starting analysis",
+            "observations": []
+        }
         
-        try:
-            # Convert to grayscale
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        max_iterations = 5
+        iteration = 0
+        
+        while iteration < max_iterations:
+            iteration += 1
+            if debug:
+                self.logger.debug(f"Agent loop iteration {iteration}")
+                self.logger.debug(f"Current context: {context}")
             
-            # Edge detection
-            edges = cv2.Canny(gray, 100, 200)
+            # Get next action from reasoning model
+            reasoning = self.get_agent_reasoning(context)
+            if debug:
+                self.logger.debug(f"Reasoning output: {reasoning}")
             
-            # Find contours
-            contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if reasoning.get("detection_status") == "complete":
+                detections.extend(reasoning.get("detected_objects", []))
+                break
             
-            # Analyze significant contours
-            for contour in contours:
-                area = cv2.contourArea(contour)
-                if area > 1000:  # Minimum area threshold
-                    x, y, w, h = cv2.boundingRect(contour)
-                    detections.append({
-                        'bbox': [x, y, x+w, y+h],
-                        'area': area
-                    })
+            # Execute next action
+            next_action = reasoning.get("next_action", {})
+            if not next_action:
+                break
+                
+            # Query VLM with specific question
+            response = self.query_vlm(image, next_action["question"])
+            if debug:
+                self.logger.debug(f"VLM Query: {next_action['question']}")
+                self.logger.debug(f"VLM Response: {response}")
             
-            return detections
-
-        except Exception as e:
-            self.logger.error(f"Error in traditional CV: {e}")
-            return []
+            # Update context
+            context["observations"].append({
+                "question": next_action["question"],
+                "response": response
+            })
+            context["current_understanding"] = reasoning.get("analysis", "")
+            
+            # Add any detected objects
+            if reasoning.get("detected_objects"):
+                detections.extend(reasoning["detected_objects"])
+        
+        return detections
 
     def run(self, image: np.ndarray, **kwargs) -> np.ndarray:
-        """Main processing pipeline"""
+        """Main plugin entry point"""
         try:
-            self.logger.info("Starting agentic detection pipeline...")
-            
-            # Get parameters from kwargs
             user_prompt = kwargs.get('prompt', '')
             debug = kwargs.get('debug', False)
             confidence_threshold = kwargs.get('confidence_threshold', 0.5)
+            
+            if not user_prompt:
+                raise ValueError("User prompt is required")
+            
+            if debug:
+                self.logger.debug(f"Processing with prompt: {user_prompt}")
+                self.logger.debug(f"Confidence threshold: {confidence_threshold}")
+                self.save_debug_image(image, "input")
             
             # Load models if needed
             if self.vlm_model is None or self.reasoning_model is None:
                 self.load_models()
             
-            # Save input image if in debug mode
-            if debug:
-                self.save_debug_image(image, "input")
-                self.logger.debug(f"Processing with confidence threshold: {confidence_threshold}")
-                self.logger.debug(f"User prompt: {user_prompt}")
+            # Run agent loop
+            detections = self.run_agent_loop(image, user_prompt, debug)
             
-            # 1. Query VLM with different perspectives
-            vlm_responses = []
-            
-            # Default questions for scene understanding
-            questions = [
-                "What potential safety hazards do you see?",
-                "Are there any workers without proper safety equipment?",
-                "Describe any dangerous equipment or materials"
-            ]
-            
-            # Add user prompt if provided
-            if user_prompt:
-                questions.insert(0, user_prompt)
-            
-            # Get VLM responses with confidence filtering
-            for question in questions:
-                response = self.query_vlm(image, question)
-                if response:  # Only add non-empty responses
-                    vlm_responses.append(response)
-                    if debug:
-                        self.logger.debug(f"Q: {question}")
-                        self.logger.debug(f"A: {response}")
-            
-            # 2. Get traditional CV detections
-            cv_detections = self.traditional_cv_detection(image)
-            
-            # Filter CV detections by confidence
-            cv_detections = [
-                det for det in cv_detections 
-                if det.get('confidence', 0.0) >= confidence_threshold
+            # Filter by confidence
+            detections = [
+                det for det in detections 
+                if det.get('confidence', 0) >= confidence_threshold
             ]
             
             if debug:
-                self.logger.debug(f"CV detections: {len(cv_detections)}")
-                
-            # 3. Process results
+                self.logger.debug(f"Final detections: {detections}")
+            
+            # Visualize results
             output_image = image.copy()
-            
-            # Draw CV detections
-            for det in cv_detections:
-                x1, y1, x2, y2 = det['bbox']
-                conf = det.get('confidence', 0.5)
-                if conf >= confidence_threshold:
-                    # Color based on confidence (green to red)
+            for det in detections:
+                coords = det.get('coordinates', [])
+                if len(coords) == 4:
+                    x1, y1, x2, y2 = coords
+                    conf = det.get('confidence', 0.5)
+                    
+                    # Color based on confidence
                     color = (0, int(255 * conf), int(255 * (1 - conf)))
                     cv2.rectangle(output_image, (x1, y1), (x2, y2), color, 2)
+                    
+                    if debug:
+                        # Add ID and confidence
+                        text = f"{det.get('id', 'obj')} ({conf:.2f})"
+                        cv2.putText(output_image, text, (x1, y1-5),
+                                  cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
             
-            # Save debug output if enabled
             if debug:
                 self.save_debug_image(output_image, "output")
-                
+            
             return output_image
             
         except Exception as e:
-            self.logger.error(f"Error in pipeline: {e}")
-            # In case of error, return original image
+            self.logger.error(f"Error in plugin execution: {e}")
             return image
