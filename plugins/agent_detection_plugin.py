@@ -201,6 +201,9 @@ Please identify the key objects with their attributes and locations.
         try:
             self.logger.info("Starting agentic detection pipeline...")
             
+            # Get user prompt from kwargs
+            user_prompt = kwargs.get('prompt', '')
+            
             # Load models if needed
             if self.vlm_model is None or self.reasoning_model is None:
                 self.load_models()
@@ -210,12 +213,19 @@ Please identify the key objects with their attributes and locations.
             
             # 1. Query VLM with different perspectives
             vlm_responses = []
+            
+            # Default questions for comprehensive scene understanding
             questions = [
                 "What objects do you see in this image?",
                 "Describe the spatial relationship between objects",
-                "What are the main colors and shapes you observe?",
-                "Are there any people or vehicles in the scene?"
+                "What are the main colors and shapes you observe?"
             ]
+            
+            # Add user prompt if provided
+            if user_prompt:
+                questions.insert(0, user_prompt)
+                # Add follow-up questions based on user prompt
+                questions.append(f"Can you describe the location and details of {user_prompt}?")
             
             for question in questions:
                 response = self.query_vlm(image, question)

@@ -50,7 +50,7 @@ pandas
 parso==0.8.3
 pexpect==4.8.0
 pickleshare==0.7.5
-Pillow==9.3.0
+Pillow
 prompt-toolkit==3.0.36
 protobuf==3.20.3
 psutil==5.9.4

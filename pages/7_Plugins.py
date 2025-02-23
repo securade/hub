@@ -1,4 +1,3 @@
-# 7_Plugins.py
 import streamlit as st
 from plugins.plugin_manager import PluginManager
 from PIL import Image
@@ -145,6 +144,46 @@ if check_password():
                     help="Higher values give better adherence to prompt"
                 )
 
+        elif selected_plugin == "agent_detector":
+            st.subheader("Agentic Detection Parameters")
+            
+            # Example prompts to help users
+            example_prompts = [
+                "Find all safety violations in the image",
+                "Identify workers without proper PPE",
+                "Detect unsafe equipment operation",
+                "Locate all emergency exits and safety equipment",
+                "Check for proper safety barriers and signage"
+            ]
+            
+            # Show example prompts as a reference
+            with st.expander("Show Example Prompts"):
+                for prompt in example_prompts:
+                    st.markdown(f"- {prompt}")
+            
+            # User prompt input
+            plugin_kwargs['prompt'] = st.text_area(
+                "Detection Prompt:",
+                help="Describe what you want to detect or analyze in the image",
+                placeholder="e.g., Find all safety violations in the image"
+            )
+            
+            # Additional parameters
+            col1, col2 = st.columns(2)
+            with col1:
+                plugin_kwargs['debug'] = st.checkbox(
+                    "Enable Debug Mode",
+                    help="Save intermediate detection results"
+                )
+            with col2:
+                plugin_kwargs['confidence_threshold'] = st.slider(
+                    "Detection Confidence:",
+                    min_value=0.0,
+                    max_value=1.0,
+                    value=0.5,
+                    help="Higher values give more confident detections"
+                )
+
         return plugin_kwargs
 
     # Get plugin-specific parameters
@@ -157,21 +196,32 @@ if check_password():
         if image is None:
             st.error("Please upload an image first.")
         else:
+            # Special validation for agent detection
+            if selected_plugin == "agent_detector" and not plugin_kwargs.get('prompt'):
+                st.error("Please enter a detection prompt.")
+                st.stop()
+            
             # Open and process the image
             img = Image.open(image)
             img_array = asarray(img)
             
-            # Run selected plugin
-            try:
-                processed_image = plugin_manager.run_plugin(selected_plugin, img_array, **plugin_kwargs)
-                
-                # Display results
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.image(img_array, caption='Input Image')
-                with col2:
-                    st.image(processed_image, caption='Processed Image')
+            # Show processing status
+            with st.spinner('Processing image...'):
+                try:
+                    processed_image = plugin_manager.run_plugin(selected_plugin, img_array, **plugin_kwargs)
                     
-            except Exception as e:
-                st.error(f"Error processing image: {str(e)}")
-                st.error("Stack trace:", stack_info=True)
+                    # Display results
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.image(img_array, caption='Input Image')
+                    with col2:
+                        st.image(processed_image, caption='Processed Image')
+                    
+                    # Show additional info for agent detection
+                    if selected_plugin == "agent_detector" and plugin_kwargs.get('debug'):
+                        st.subheader("Detection Details")
+                        st.info("Debug images saved in: debug_output/agent_detection/")
+                        
+                except Exception as e:
+                    st.error(f"Error processing image: {str(e)}")
+                    st.error("Stack trace:", stack_info=True)
