@@ -304,194 +304,35 @@ class GeminiAgentPlugin(BasePlugin):
                 kept_detections.append(det)
                 
         return kept_detections
-    
-    def analyze_query(self, query: str, image_description: str) -> List[Dict]:
-        """
-        Break down user query into specific detection tasks
-        
-        Args:
-            query: User's original query
-            image_description: Initial analysis of the image
-            
-        Returns:
-            List of detection tasks with specific prompts
-        """
-        prompt = f"""Given this user query: "{query}"
-        And this image description: "{image_description}"
-        
-        Break this down into specific object detection tasks.
-        
-        For each task:
-        1. What specific objects should be detected?
-        2. What visual characteristics identify these objects?
-        3. What spatial relationships matter?
-        4. What level of confidence is needed?
-        
-        Return in this JSON format:
-        [
-            {{
-                "task_id": "unique_id",
-                "objects": ["list", "of", "objects"],
-                "characteristics": "visual details to look for",
-                "spatial": "relevant spatial relationships",
-                "min_confidence": 0.X,
-                "detection_prompt": "specific prompt for detection"
-            }}
-        ]
-        """
-        
-        try:
-            response = self.client.chat.completions.create(
-                model=self.MODEL,
-                messages=[{"role": "user", "content": prompt}]
-            )
-            
-            json_str = self.extract_json_from_response(response.choices[0].message.content)
-            tasks = json.loads(json_str)
-            
-            self.logger.info(f"Generated {len(tasks)} detection tasks")
-            return tasks
-            
-        except Exception as e:
-            self.logger.error(f"Error analyzing query: {e}")
-            return []
-        
-    def get_initial_description(self, image: np.ndarray) -> str:
-        """Get high-level description of image content"""
-        try:
-            base64_image = self.encode_image(image)
-            
-            prompt = """Describe this image focusing on:
-            1. Overall scene and context
-            2. Main subjects and their arrangement
-            3. Notable visual elements
-            Keep it concise but detailed."""
-            
-            response = self.client.chat.completions.create(
-                model=self.MODEL,
-                messages=[{
-                    "role": "user", 
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
-                        }
-                    ]
-                }]
-            )
-            
-            return response.choices[0].message.content
-            
-        except Exception as e:
-            self.logger.error(f"Error getting image description: {e}")
-            return ""
-        
-    def refine_detection(self, task: Dict, initial_detections: List[Dict], 
-                        image: np.ndarray) -> List[Dict]:
-        """
-        Refine detection results based on task requirements
-        
-        Args:
-            task: Detection task specification
-            initial_detections: Initial detection results
-            image: Input image
-            
-        Returns:
-            Refined list of detections
-        """
-        try:
-            base64_image = self.encode_image(image)
-            
-            prompt = f"""Review these detections for task: {json.dumps(task)}
-            
-            Initial detections: {json.dumps(initial_detections)}
-            
-            1. Are the detections complete and accurate?
-            2. Do they match the required characteristics?
-            3. Are spatial relationships correct?
-            4. Should any detections be removed or adjusted?
-            
-            Return refined detections in the same format, or confirm existing ones."""
-            
-            response = self.client.chat.completions.create(
-                model=self.MODEL,
-                messages=[{
-                    "role": "user", 
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
-                        }
-                    ]
-                }]
-            )
-            
-            json_str = self.extract_json_from_response(response.choices[0].message.content)
-            refined = json.loads(json_str)
-            
-            if not refined:
-                return initial_detections
-                
-            return refined
-            
-        except Exception as e:
-            self.logger.error(f"Error refining detections: {e}")
-            return initial_detections
-        
 
     def run(self, image: np.ndarray, **kwargs) -> np.ndarray:
-        """Enhanced main plugin entry point with agent-based workflow"""
+        """Main plugin entry point with improved detection"""
         try:
-            query = kwargs.get('prompt', '')
+            prompt = kwargs.get('prompt', '')
             debug = kwargs.get('debug', False)
             
-            if not query:
-                raise ValueError("Query is required")
+            if not prompt:
+                raise ValueError("Prompt is required")
             
-            self.logger.info(f"Starting agent-based detection for: {query}")
-            
-            # Phase 1: Initial Analysis
-            description = self.get_initial_description(image)
+            self.logger.info(f"Starting detection for: {prompt}")
             if debug:
-                self.logger.debug(f"Initial description: {description}")
+                self.save_debug_image(image, "1_input")
             
-            # Phase 2: Task Generation
-            tasks = self.analyze_query(query, description)
-            if not tasks:
-                return image
+            # Streamline the process - go directly to detection
+            detections = self.extract_bounding_boxes(image, "", prompt)
             
-            # Phase 3: Detection Loop
-            all_detections = []
-            for task in tasks:
-                # Initial detection using task prompt
-                detections = self.extract_bounding_boxes(
-                    image, 
-                    description,
-                    task['detection_prompt']
-                )
-                
-                # Refine based on task requirements
-                if detections:
-                    refined = self.refine_detection(task, detections, image)
-                    all_detections.extend(refined)
-            
-            # Phase 4: Final Processing
-            if all_detections:
-                self.logger.info(f"Total detections after refinement: {len(all_detections)}")
-                # Apply NMS across all detections
-                final_detections = self.non_max_suppression(all_detections)
-                output_image = self.draw_detections(image, final_detections, debug=debug)
+            if detections:
+                self.logger.info(f"Found {len(detections)} valid detections")
+                output_image = self.draw_detections(image, detections, debug=debug)
             else:
-                self.logger.warning("No valid detections found")
+                self.logger.warning(f"No valid detections found for: {prompt}")
                 output_image = image.copy()
             
             if debug:
-                self.save_debug_image(output_image, "final_output")
+                self.save_debug_image(output_image, "2_final_output")
             
             return output_image
                 
         except Exception as e:
-            self.logger.error(f"Error in agent workflow: {e}")
+            self.logger.error(f"Error in plugin execution: {e}")
             return image
