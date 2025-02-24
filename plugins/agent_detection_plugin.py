@@ -131,7 +131,7 @@ class GeminiAgentPlugin(BasePlugin):
             self.logger.error(f"Error processing bbox {bbox}: {e}")
             return None
 
-    def extract_bounding_boxes(self, image: np.ndarray, analysis: str, prompt: str) -> List[Dict]:
+    def extract_bounding_boxes(self, image: np.ndarray, analysis: str, prompt: str, confidence_threshold) -> List[Dict]:
         """Extract precise bounding box coordinates from Gemini with improved prompt"""
         try:
             base64_image = self.encode_image(image)
@@ -189,7 +189,7 @@ class GeminiAgentPlugin(BasePlugin):
                     valid_detections.append(det)
             
             # Apply NMS to remove overlaps
-            final_detections = self.non_max_suppression(valid_detections, iou_threshold=0.3)
+            final_detections = self.non_max_suppression(valid_detections, iou_threshold=confidence_threshold)
             
             self.logger.info(f"Found {len(final_detections)} objects after NMS")
             return final_detections
@@ -310,6 +310,7 @@ class GeminiAgentPlugin(BasePlugin):
         try:
             prompt = kwargs.get('prompt', '')
             debug = kwargs.get('debug', False)
+            confidence_threshold = kwargs.get('confidence_threshold', 0.5)
             
             if not prompt:
                 raise ValueError("Prompt is required")
@@ -319,7 +320,7 @@ class GeminiAgentPlugin(BasePlugin):
                 self.save_debug_image(image, "1_input")
             
             # Streamline the process - go directly to detection
-            detections = self.extract_bounding_boxes(image, "", prompt)
+            detections = self.extract_bounding_boxes(image, "", prompt, confidence_threshold)
             
             if detections:
                 self.logger.info(f"Found {len(detections)} valid detections")
