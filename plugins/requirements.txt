@@ -1,4 +1,4 @@
 transformers
 diffusers
 accelerate
-num2words
+openai
