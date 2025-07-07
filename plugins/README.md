@@ -98,6 +98,59 @@ class EdgeDetector(BasePlugin):
         return cv2.cvtColor(edges, cv2.COLOR_GRAY2RGB)
 ```
 
+### 3. Agent Detector (`agent_detection_plugin.py`)
+Uses Gemini Flash model for intelligent object detection with natural language prompts:
+```python
+class GeminiAgentPlugin(BasePlugin):
+    SLUG = "agent_detector"
+    NAME = "Agent Detector"
+    
+    def run(self, image: np.ndarray, **kwargs) -> np.ndarray:
+        prompt = kwargs.get('prompt', '')  # Natural language prompt
+        debug = kwargs.get('debug', False)
+        confidence_threshold = kwargs.get('confidence_threshold', 0.5)
+        
+        # Uses Gemini Flash to detect objects based on prompt
+        # Draws bounding boxes around detected objects
+        # Returns annotated image
+```
+
+### 4. Safety Transform (`safety_transform_plugin.py`)
+Transforms detected persons without safety gear to appear wearing safety equipment:
+```python
+class SafetyTransformPlugin(BasePlugin):
+    SLUG = "safety_transform"
+    NAME = "Safety Gear Transform"
+    
+    def run(self, image: np.ndarray, **kwargs) -> np.ndarray:
+        detector = kwargs.get('yolo_detector')  # Requires YOLO detector
+        num_inference_steps = kwargs.get('num_inference_steps', 20)
+        guidance_scale = kwargs.get("guidance_scale", 8.0)
+        
+        # 1. Detects persons without safety vest using YOLO
+        # 2. Generates segmentation mask using SAM model
+        # 3. Inpaints safety gear using Stable Diffusion
+        # Returns transformed image
+```
+
+### 5. Content Moderator (`content_moderation_plugin.py`)
+Analyzes images for inappropriate content across multiple categories:
+```python
+class ContentModerationPlugin(BasePlugin):
+    SLUG = "content_moderator"
+    NAME = "Content Moderator"
+    
+    def run(self, image: np.ndarray, **kwargs) -> np.ndarray:
+        debug = kwargs.get('debug', False)
+        safety_threshold = kwargs.get('safety_threshold', 0.7)
+        
+        # Analyzes image for categories: nudity, violence, gore,
+        # hate symbols, drugs, weapons, etc.
+        # Draws bounding boxes around detected inappropriate content
+        # Shows overall safety status (SAFE/UNSAFE) with score
+        # Returns annotated image
+```
+
 ## Best Practices
 
 1. **Error Handling**: Handle missing dependencies and invalid parameters gracefully
