@@ -176,7 +176,7 @@ class GeminiAgentPlugin(BasePlugin):
             detections = json.loads(json_str)
             
             # Filter by confidence first
-            detections = [d for d in detections if d.get('confidence', 0) > 0.5]
+            detections = [d for d in detections if d.get('confidence', 0) >= confidence_threshold]
             
             # Convert coordinates
             valid_detections = []
@@ -189,7 +189,7 @@ class GeminiAgentPlugin(BasePlugin):
                     valid_detections.append(det)
             
             # Apply NMS to remove overlaps
-            final_detections = self.non_max_suppression(valid_detections, iou_threshold=confidence_threshold)
+            final_detections = self.non_max_suppression(valid_detections)
             
             self.logger.info(f"Found {len(final_detections)} objects after NMS")
             return final_detections
