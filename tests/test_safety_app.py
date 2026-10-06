@@ -156,10 +156,11 @@ class TestDetectPPE:
         safety_app.detect_ppe(image, [PERSON_A, on_a("NO-Hardhat")], **self.DEFAULT)
         assert drawn[0][0] == "['NO-Hardhat']"
 
-    @pytest.mark.xfail(strict=True, reason="flag is overwritten per person, so only the last person counts")
     def test_violation_is_reported_whatever_the_detection_order(self, image, drawn):
         violator_first = [PERSON_A, on_a("NO-Hardhat"), PERSON_B, on_b("Hardhat")]
+        violator_last = [PERSON_B, on_b("Hardhat"), PERSON_A, on_a("NO-Hardhat")]
         assert safety_app.detect_ppe(image, violator_first, **self.VIOLATIONS_ONLY) is True
+        assert safety_app.detect_ppe(image, violator_last, **self.VIOLATIONS_ONLY) is True
 
 
 class TestDetectProximity:
@@ -197,8 +198,10 @@ class TestDetectZone:
     def zone(self, image, boxes, persons=True, machines=False, vehicles=False, inclusion=False, max_allowed=0, poly=ZONE):
         return safety_app.detect_zone(image, boxes, poly, persons, machines, vehicles, inclusion, max_allowed)
 
-    def test_missing_polygon_returns_none(self, image, drawn):
-        assert self.zone(image, [PERSON_A], poly=None) is None
+    @pytest.mark.parametrize("poly", [None, [], [[0, 0], [100, 0]]])
+    def test_missing_or_degenerate_polygon_is_no_violation(self, image, drawn, poly):
+        assert self.zone(image, [PERSON_A], poly=poly) is False
+        assert self.zone(image, [PERSON_A], poly=poly, inclusion=True) is False
 
     def test_zone_outline_is_drawn_on_the_frame(self, image, drawn):
         self.zone(image, [])
@@ -239,10 +242,10 @@ class TestDetectZone:
         both_inside = [PERSON_A, det("Person", 30, 10, 90, 190)]
         assert self.zone(image, both_inside, max_allowed=1) is True
 
-    @pytest.mark.xfail(strict=True, reason="max_allowed is compared with the count in the whole frame, not in the zone")
     def test_max_allowed_counts_only_objects_in_the_zone(self, image, drawn):
         one_inside_one_outside = [PERSON_A, PERSON_B]
         assert self.zone(image, one_inside_one_outside, max_allowed=1) is False
+        assert drawn == [("Person", GREEN), ("Person", GREEN)]
 
     def test_inclusion_zone_flags_when_empty(self, image, drawn):
         assert self.zone(image, [PERSON_B], inclusion=True) is True
@@ -254,7 +257,3 @@ class TestDetectZone:
 
     def test_inclusion_zone_with_no_detections_is_flagged(self, image, drawn):
         assert self.zone(image, [], inclusion=True) is True
-
-    @pytest.mark.xfail(strict=True, reason="a policy saved without a drawn zone reaches detect_zone as an empty polygon")
-    def test_empty_polygon_does_not_crash(self, image, drawn):
-        assert self.zone(image, [PERSON_A], poly=[]) is False

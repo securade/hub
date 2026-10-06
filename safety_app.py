@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-import functools
 from shapely.geometry import Polygon
 from shapely.geometry import box
 from utils.plots import plot_one_box
@@ -42,7 +41,7 @@ def detect_ppe(img, box_list, hardhats, vests, masks, no_hardhats, no_vests, no_
                             color = (0,255,0)
                         if color_red == True:
                             color = (0,0,255)
-                    flag = color_green or color_red
+                    flag = flag or color_green or color_red
                     draw_box(img,str(name),px0,py0,px1,py1,color)
     return flag
 
@@ -147,10 +146,14 @@ def does_intersect_poly(x1,y1,x2,y2, poly):
     rect = box(x1,y1,x2,y2)
     return rect.intersects(p)
 
+def count_in_zone(box_list, label, poly):
+    return sum(1 for item in box_list
+               if str(item[0]) == label and does_intersect_poly(item[1], item[2], item[3], item[4], poly))
+
 def detect_zone(img, box_list, poly, persons, machines, vehicles, inclusion, max_number_allowed):
-    if poly is None:
+    if poly is None or len(poly) < 3:
         print('Please draw the polygon.')
-        return
+        return False
     predicted_bboxes_PascalVOC = box_list
     flag = False if not inclusion else True
     pts = np.array(poly)
@@ -170,14 +173,15 @@ def detect_zone(img, box_list, poly, persons, machines, vehicles, inclusion, max
     c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
     cv2.rectangle(img, c1, c2, (255,0,0), -1, cv2.LINE_AA)  # filled
     cv2.putText(img, 'Exclusion Zone', (c1[0], c1[1] - 2), 0, 2/3, [225, 255, 255], 2, lineType=cv2.LINE_AA)
+    # max_number_allowed applies to the objects inside the zone, not the whole frame
+    person_count = count_in_zone(predicted_bboxes_PascalVOC, 'Person', poly)
+    machine_count = count_in_zone(predicted_bboxes_PascalVOC, 'machinery', poly)
+    vehicle_count = count_in_zone(predicted_bboxes_PascalVOC, 'vehicle', poly)
     if len(predicted_bboxes_PascalVOC)>0:
             for item in predicted_bboxes_PascalVOC:
                 #print(item)
                 name = str(item[0])
                 color = (0,255,0)# green
-                person_count = functools.reduce(lambda x,y : x + 1 if str(y[0]) == 'Person' else x, predicted_bboxes_PascalVOC, 0)
-                machine_count = functools.reduce(lambda x,y : x + 1 if str(y[0]) == 'machinery' else x, predicted_bboxes_PascalVOC, 0)
-                vehicle_count = functools.reduce(lambda x,y : x + 1 if str(y[0]) == 'vehicle' else x, predicted_bboxes_PascalVOC, 0)
                 if persons and name == 'Person':
                     px0, py0, px1, py1 = item[1], item[2], item[3], item[4]
                     if does_intersect_poly(px0,py0,px1,py1,poly) and person_count > max_number_allowed:
