@@ -12,7 +12,6 @@ import platform
 if platform.machine() == 'x86_64':
     from openvino.runtime import Model
 
-import functools
 import json
 #
 
@@ -455,6 +454,15 @@ class SingleInference_YOLOV7:
         # print(color)
         cv2.rectangle(image,box[:2],box[2:],color,4)
     
+    def count_in_zone(self, label, poly):
+        count = 0
+        for item in self.predicted_bboxes_PascalVOC:
+            if str(item[0]) == label:
+                x0, y0, x1, y1 = self.scale_coords_box(item[1], item[2], item[3], item[4], self.ratio, self.dwdh)
+                if self.does_intersect_poly(x0, y0, x1, y1, poly):
+                    count += 1
+        return count
+
     def detect_zone(self, img, poly, persons, machines, vehicles, inclusion, max_number_allowed):
         red_color = (255,0,0)
         self.load_cv2mat(img)
@@ -463,9 +471,9 @@ class SingleInference_YOLOV7:
         # print(yolov7_detector.conf_thres)
         # annotated_image = yolov7_detector.image.copy()
         color_image = img.copy()
-        if poly is None:
+        if poly is None or len(poly) < 3:
             print('Please draw the polygon.')
-            return
+            return color_image
         # print(poly)
         pts = np.array(poly)
         pts = pts.round().astype(np.int32)
@@ -479,14 +487,15 @@ class SingleInference_YOLOV7:
         # over the image
         color_image = cv2.addWeighted(overlay, alpha, color_image, 1 - alpha, 0)
         # result: List[Detection] = []
+        # max_number_allowed applies to the objects inside the zone, not the whole frame
+        person_count = self.count_in_zone('Person', poly)
+        machine_count = self.count_in_zone('machinery', poly)
+        vehicle_count = self.count_in_zone('vehicle', poly)
         if len(self.predicted_bboxes_PascalVOC)>0:
                 for item in self.predicted_bboxes_PascalVOC:
                     # print(item)
                     name = str(item[0])
                     color = (0,255,0)# green
-                    person_count = functools.reduce(lambda x,y : x + 1 if str(y[0]) == 'Person' else x, self.predicted_bboxes_PascalVOC, 0)
-                    machine_count = functools.reduce(lambda x,y : x + 1 if str(y[0]) == 'machinery' else x, self.predicted_bboxes_PascalVOC, 0)
-                    vehicle_count = functools.reduce(lambda x,y : x + 1 if str(y[0]) == 'vehicle' else x, self.predicted_bboxes_PascalVOC, 0)
                     if persons and name == 'Person':
                         px0, py0, px1, py1 = self.scale_coords_box(item[1], item[2], item[3], item[4],
                                                         self.ratio, self.dwdh)
