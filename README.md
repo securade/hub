@@ -16,7 +16,7 @@ It uses natural language text and generative AI to automatically train and fine-
 
 🎯 **Real-Time Detection** - Live monitoring of CCTV feeds for safety and security incidents
 
-👷 **PPE Detection** - Automated detection of hardhat, vest, and mask compliance
+👷 **PPE Detection** - Automated detection of hardhat, vest, and mask compliance. To try it on a single photo without installing anything, use the [PPE Photo Checker](https://www.merasaas.com/tools/ppe-photo-checker), which runs the same detection in your browser
 
 ⚡ **Proximity Alerts** - Monitor safe distances between workers and machinery/vehicles
 
